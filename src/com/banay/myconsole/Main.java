@@ -1,7 +1,13 @@
+package com.banay.myconsole;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import com.banay.myconsole.data.structures.BinTreeNode;
+import com.banay.myconsole.data.structures.MyList;
+import com.banay.myconsole.data.structures.Node;
+import com.banay.myconsole.data.structures.Queue;
 
 public class Main {
 
@@ -14,15 +20,24 @@ public class Main {
 		public static final String CREATE = "create";
 	}
 
-	public static final String WELCOME_TEXT_PART_1 = "Welcome, motherfucker!";
-	public static final String WELCOME_TEXT_PART_2 = "Write something and if it is not bullshit I will execute it";
+	public final class Text {
+		public static final String WELCOME_PART_1 = "Welcome, motherfucker!";
+		public static final String WELCOME_PART_2 = "Write something and if it is not bullshit I will execute it";
+	}
+
+	public final class Man {
+		public static final String CREATE = "create [type] [id] (argIds...)";
+		public static final String BTN = "btn [id] [info] (left id) (right id) {creates a new btn}";
+		public static final String PRINT = "print [id] {prints the object}";
+		public static final String QUEUE = "queue\n<new [id] {creates a new queue}>\n<insert [id] [infoId]>";
+	}
 
 	public static HashMap<String, Object> objects = new HashMap<String, Object>();
 	public static Scanner reader = new Scanner(System.in);
 
 	public static void main(String[] args) {
-		System.out.println(WELCOME_TEXT_PART_1);
-		System.out.println(WELCOME_TEXT_PART_2);
+		System.out.println(Text.WELCOME_PART_1);
+		System.out.println(Text.WELCOME_PART_2);
 
 		String[] input = reader.nextLine().split("\\s+", 10);
 
@@ -42,10 +57,12 @@ public class Main {
 		}
 	}
 
-	static void create(String[] input){
+	static void create(String[] input) {
+		
+		
 		String type = input[1];
 		String id = input[2];
-		
+
 		Class<?> cls;
 		try {
 			cls = Class.forName(type);
@@ -53,38 +70,38 @@ public class Main {
 			System.out.println("No such class!");
 			return;
 		}
-		
+
 		ArrayList<Object> args = new ArrayList<Object>();
-		for(int i = 3; i<input.length; i++){
+		for (int i = 3; i < input.length; i++) {
 			String argId = input[i];
-			
+
 			Object o = objects.get(argId);
-			
-			if(o == null){
-				System.out.println("Object with id "+argId+" not found");
+
+			if (o == null) {
+				System.out.println("Object with id " + argId + " not found");
 				return;
 			}
-			
+
 			args.add(o);
 		}
-		
+
 		Class<?>[] argsClasses = new Class<?>[args.size()];
-		for(int i = 0; i< argsClasses.length; i++){
+		for (int i = 0; i < argsClasses.length; i++) {
 			argsClasses[i] = args.get(i).getClass();
 		}
-		
+
 		try {
 			Constructor<?> constructor = cls.getConstructor(argsClasses);
 		} catch (SecurityException e) {
 			System.out.println("Unknown problem...");
 			return;
 		} catch (NoSuchMethodException e) {
-			System.out.println("There is no constructor that fits the argument");
+			System.out
+					.println("There is no constructor that fits the argument");
 		}
-		
-		
+
 	}
-	
+
 	static void print(String[] input) {
 		String id = input[1];
 
@@ -94,14 +111,13 @@ public class Main {
 
 	static void help() {
 		System.out.println("Commands:");
-		System.out.println("create [type] [id] (argIds...)");
 		System.out
 				.println("command [required] (optional) <subcommand> {explanation}");
-		System.out.println("print [id] {prints the object}");
-		System.out
-				.println("btn [id] [info] (left id) (right id) {creates a new btn}");
-		System.out
-				.println("queue\n<new [id] {creates a new queue}>\n<insert [id] [infoId]>");
+		System.out.println();
+		System.out.println(Man.CREATE);
+		System.out.println(Man.PRINT);
+		System.out.println(Man.BTN);
+		System.out.println(Man.QUEUE);
 	}
 
 	static void btn(String[] input) {
@@ -193,5 +209,41 @@ public class Main {
 
 			queue.insert(info);
 		}
+	}
+
+	static <T extends Comparable<T>> void addSorted(T value,
+			MyList<T> list) {
+		Node<T> prev = null;
+		Node<T> current = list.getFirst();
+		
+		while (current != null && current.getInfo().compareTo(value) <= 0) {
+			prev = current;
+			current = current.getNext();
+		}
+		list.insert(prev, value);
+	}
+
+	private String[] getCommandArgs(String[] input){
+		ArrayList<String> commandArgs = new ArrayList<String>();
+		
+		for(String s : input){
+			if(s.startsWith("-")){
+				if(s.startsWith("--"))
+				{
+					commandArgs.add(s.substring(2));
+				}
+				else
+				{
+					String commandArgsString = s.substring(1);
+					for(char c: commandArgsString.toCharArray()){
+						commandArgs.add(Character.toString(c));
+					}
+				}
+			}
+		}
+		
+		String[] result = new String[commandArgs.size()];
+		commandArgs.toArray(result);
+		return result;
 	}
 }
